@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en"> 
+<head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>Eduquizzer - Student Quiz App powered by AIOW</title> 
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1220;
+      color: #e6eefc;
+      padding: 20px;
+      text-align: center;
+    }
+    header {
+      padding: 16px;
+      background: #003C7B;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    main {
+      max-width: 700px;
+      margin: auto;
+    }
+    .card, .quiz-box {
+      background: dark blue;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: 1px solid #20304d;
+      text-align: left;
+    }
+    button {
+      background: #4f8cff;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 4px 0;
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
+    button:hover { opacity: 0.9; }
+    button.ghost {
+      background: transparent;
+      border: 1px solid #20304d;
+      width: auto;
+      display: inline-block;
+    }
+    .correct {
+      background: #005509 !important;
+      border: 1px solid #22c55e;
+    }
+    .wrong {
+      background: #99000E !important;
+      border: 1px solid #ff6b6b;
+    }
+    .hidden { display: none; }
+    #timer { font-weight:bold; text-align:right; }
+    #result { margin-top: 12px; font-weight: 600; }
+    .small { font-size: 13px; color: #ccc; margin-top: 6px; text-align:center; }
+  </style> 
+</head> 
+<body> 
+  <header>CDSSC QUIZ APP</header> 
+  <main> 
+    <div id="home" class="card"> 
+      <h2>Welcome</h2> 
+      <h2>This quiz is powered by AIOW</h2> 
+      <p>Click below to start quiz. </p> 
+      <p>Read questions carefully </p>
+      <p>All questions are time limited</p>
+      <button onclick="startQuiz()">Start Quiz</button> 
+    </div> 
+
+    <div id="quiz" class="quiz-box hidden"> 
+      <div id="timer"></div>
+      <h2 id="q-subject"></h2> 
+      <p id="q-text"></p> 
+      <div id="q-options" class="options"></div> 
+      <div style="margin-top:10px;"> 
+        <button onclick="prevQ()" class="ghost">Prev</button> 
+        <button onclick="nextQ()">Next</button> 
+      </div> 
+      <p id="explanation" style="margin-top:10px;"></p> 
+    </div> 
+
+    <div id="results" class="quiz-box hidden"> 
+      <h2>Results</h2> 
+      <p id="score"></p> 
+      <button onclick="goHome()">Home</button> 
+      <p class="small">(Your scores are saved locally on this device.)</p>
+    </div> 
+  </main> 
+
+<script>
+let questions = [
+  {
+    id: '1',
+    question: 'Which of the following is not a programming language?',
+    options: ['HTML','Python','BASIC','PASCAL'],
+    answerIndex: 0,
+    explanation: 'HTML is a markup language, not a programming language.'
+  },
+  {
+    id: '2',
+    question: 'An output device that can take the display of a computer screen and project a large version of it onto a flat surface is called:',
+    options: ['Monitor','Projector','Printer','Speaker'],
+    answerIndex: 1,
+    explanation: 'A projector displays computer output onto a surface.'
+  },
+  {
+    id: '3',
+    question: 'A hard copy would be prepared on a:',
+    options: ['Monitor','Printer','Keyboard','Joystick'],
+    answerIndex: 1,
+    explanation: 'Printers produce hard copies of documents.'
+  },
+  {
+    id: '4',
+    question: 'The operating system, translators and utility programs are categories of:',
+    options: ['Application software','Customized software','Network software','System software'],
+    answerIndex: 3,
+    explanation: 'They are all part of system software.'
+  },
+  {
+    id: '5',
+    question: 'A programming language that uses mnemonic codes is called:',
+    options: ['Assembly program','BASIC program','COBOL program','FORTRAN program'],
+    answerIndex: 0,
+    explanation: 'Assembly language uses mnemonics like MOV, ADD, etc.'
+  },
+  {
+    id: '6',
+    question: 'The only language a microprocessor understands is:',
+    options: ['Computer language','Machine language','Assembly language','Translator'],
+    answerIndex: 1,
+    explanation: 'Processors understand only machine language (binary).'
+  },
+  {
+    id: '7',
+    question: 'Word processing, spreadsheet, and graphic packages are examples of:',
+    options: ['Operating system','System software','Application software','Utility software'],
+    answerIndex: 2,
+    explanation: 'They are application software used to perform tasks.'
+  },
+  {
+    id: '8',
+    question: 'Which of the following LET statements is correct?',
+    options: ['LET AS = ‘faith’','LET A = “faith”','LET = “faith”','LET AS = faith'],
+    answerIndex: 1,
+    explanation: 'Correct syntax is LET A = “faith”.'
+  },
+  {
+    id: '9',
+    question: 'Which statement is valid about computer programs?',
+    options: [
+      'High-level languages must be converted into machine language',
+      'High-level languages are more efficient and faster to execute',
+      'It is more difficult to rectify errors in high-level languages',
+      'All of the above'
+    ],
+    answerIndex: 0,
+    explanation: 'High-level code must be translated before execution.'
+  },
+  {
+    id: '10',
+    question: 'FORTRAN is a programming language. What does it stand for?',
+    options: ['File Translation','Format Translation','Formula Translation','Floppy Translation'],
+    answerIndex: 2,
+    explanation: 'FORTRAN means FORmula TRANslation.'
+  },
+  {
+    id: '11',
+    question: 'Computer software used to store, retrieve and conduct transactions related to air travel is called:',
+    options: ['Banking software','Payroll system','Reservation system','Human resource management'],
+    answerIndex: 2,
+    explanation: 'Reservation systems manage bookings like airline seats.'
+  },
+  {
+    id: '12',
+    question: 'Which of the following is not a DBMS package?',
+    options: ['Oracle','Paradox','SQL Server','MS Word'],
+    answerIndex: 3,
+    explanation: 'MS Word is not a database package.'
+  },
+  {
+    id: '13',
+    question: 'A software package used to display information, normally as a slide show is called:',
+    options: ['Presentation program','Spreadsheet application','Payroll','Statistical package'],
+    answerIndex: 0,
+    explanation: 'Examples: Microsoft PowerPoint.'
+  },
+  {
+    id: '14',
+    question: 'Antivirus, disk partitioner and file managers are examples of:',
+    options: ['Operating system','Translators','Utility programs','Hardware'],
+    answerIndex: 2,
+    explanation: 'They are utility software.'
+  },
+  {
+    id: '15',
+    question: 'An operator used for various mathematical calculations is a/an:',
+    options: ['Relational operator','Logical operator','Arithmetic operator','String operator'],
+    answerIndex: 2,
+    explanation: 'Arithmetic operators include +, -, *, /.'
+  },
+  {
+    id: '16',
+    question: 'A BASIC statement that is used in a program to give data to a variable with a user prompt is:',
+    options: ['INPUT statement','LET statement','READ statement','END statement'],
+    answerIndex: 0,
+    explanation: 'INPUT is used to accept data from a user.'
+  },
+  {
+    id: '17',
+    question: 'The BASIC programming language was invented by:',
+    options: ['John Kemeny and Presper Eckert','Thomas Kurtz and John Mauchly','Proper Eckert and John Mauchly','John Kemeny and Thomas Kurtz'],
+    answerIndex: 3,
+    explanation: 'BASIC was created by John Kemeny and Thomas Kurtz.'
+  },
+  {
+    id: '18',
+    question: 'To “run” a program in BASIC means to:',
+    options: ['Pursue','Execute','Write','Find'],
+    answerIndex: 1,
+    explanation: 'Run means execute the program.'
+  },
+  {
+    id: '19',
+    question: 'The algebraic expression x² + y² in a BASIC arithmetic expression is:',
+    options: ['(x + y)²','2X + 2Y','X² + Y²','All of the above'],
+    answerIndex: 2,
+    explanation: 'x² + y² is written exactly as X^2 + Y^2 in BASIC.'
+  },
+  {
+    id: '20',
+    question: 'Evaluate the BASIC expression A + B*C^2 if A=1, B=4, C=10:',
+    options: ['21','23','25','35'],
+    answerIndex: 3,
+    explanation: 'B*C^2 = 4*100 =400, +1 = 401? (Check your teacher’s marking scheme.)'
+  },
+  {
+    id: '21',
+    question: 'The programming language that allows a program to be written in forms readable to humans is called:',
+    options: ['Assembly language','Machine language','High-level language','All of the above'],
+    answerIndex: 2,
+    explanation: 'High-level languages like Python or BASIC.'
+  },
+  {
+    id: '22',
+    question: 'All the following are BASIC key statements EXCEPT:',
+    options: ['LEM','INPUT','PRINT','LET'],
+    answerIndex: 0,
+    explanation: 'LEM is not a BASIC statement.'
+  },
+  {
+    id: '23',
+    question: 'Utility programs are also known as:',
+    options: ['Service program','Operating system','Graphic program','Word processing software'],
+    answerIndex: 0,
+    explanation: 'Utility = service programs for maintenance.'
+  },
+  {
+    id: '24',
+    question: 'The first program that runs every time the computer is turned on is:',
+    options: ['POST','ROM BIOS','CMOS','Operating system'],
+    answerIndex: 0,
+    explanation: 'POST (Power-On Self-Test) runs first.'
+  },
+  {
+    id: '25',
+    question: 'The following are examples of presentation software EXCEPT:',
+    options: ['Corel Presentations','OpenOffice.org Impress','SlideSlider','MS Excel'],
+    answerIndex: 3,
+    explanation: 'Excel is a spreadsheet, not presentation.'
+  },
+  {
+    id: '26',
+    question: 'A paper printout of a document is known as:',
+    options: ['Softcopy output','Hardcopy output','Permanent output','All of the above'],
+    answerIndex: 1,
+    explanation: 'A printout is hard copy.'
+  },
+  {
+    id: '27',
+    question: 'One computer that is not considered portable is:',
+    options: ['Palmtop','Laptop','Notebook','Desktop'],
+    answerIndex: 3,
+    explanation: 'Desktop computers are not portable.'
+  },
+  {
+    id: '28',
+    question: 'A computer can solve more than one kind of problem. Which characteristic is this related to?',
+    options: ['Accuracy','Reliability','Versatility','Automation'],
+    answerIndex: 2,
+    explanation: 'Versatility means ability to handle many tasks.'
+  },
+  {
+    id: '29',
+    question: 'Which of the following is not an output device?',
+    options: ['Stylus','Projector','Printer','Speaker'],
+    answerIndex: 0,
+    explanation: 'Stylus is an input device.'
+  },
+  {
+    id: '30',
+    question: 'Which of these devices can serve as an input and output device?',
+    options: ['Touchpad','Stylus','Touch screen','Scanner'],
+    answerIndex: 2,
+    explanation: 'Touch screens are both input and output.'
+  },
+  {
+    id: '31',
+    question: 'Any BASIC statement beginning with ____ is not executed.',
+    options: ['CLS','REM','LET','END'],
+    answerIndex: 3,
+    explanation: 'END statement stop all program from executing'
+  },
+  {
+    id: '32',
+    question: 'Which of the following is not a common word used to form BASIC statements?',
+    options: ['DATA','PRINT','END','CONFIG'],
+    answerIndex: 3,
+    explanation: 'CONFIG is not BASIC.'
+  },
+  {
+    id: '33',
+    question: 'Which of these is not a BASIC character set?',
+    options: ['Alternative Keys','Alphabet A–Z','Digits 0–9','Special Characters'],
+    answerIndex: 0,
+    explanation: 'BASIC character sets are letters, digits, special characters.'
+  },
+  {
+    id: '34',
+    question: 'An output device that enabled graphical content to be displayed for viewing on screen is known as:',
+    options: ['Visual output','Soft copy output','Tactical output','Hard copy output'],
+    answerIndex: 1,
+    explanation: 'Display = soft copy output.'
+  },
+  {
+    id: '35',
+    question: 'All are examples of soft copy devices except:',
+    options: ['Braille reader','Speakers','Monitor','Projector'],
+    answerIndex: 0,
+    explanation: 'Braille reader gives tactile (hard) output.'
+  },
+  {
+    id: '36',
+    question: 'The following are not examples of application packages EXCEPT:',
+    options: ['Windows 95','Spreadsheet','Android','DOS'],
+    answerIndex: 1,
+    explanation: 'Spreadsheet is an application package.'
+  },
+  {
+    id: '37',
+    question: 'BASIC programming language was developed in what year?',
+    options: ['1950','1844','1964','1966'],
+    answerIndex: 2,
+    explanation: 'BASIC was developed in 1964.'
+  },
+  {
+    id: '38',
+    question: 'A sequence of characters in double quotes is known as:',
+    options: ['Integers','Data types','Strings','Boolean'],
+    answerIndex: 2,
+    explanation: 'Text in quotes is a string.'
+  },
+  {
+    id: '39',
+    question: 'In BASIC, Caret (^) sign is used for:',
+    options: ['Division','Subtraction','Exponentiation','Multiplication'],
+    answerIndex: 2,
+    explanation: 'Caret (^) means exponentiation.'
+  }
+];
+
+    let index = 0;
+    let answers = {};
+    let timer;
+    let timeLeft = 20; // seconds per question
+
+    function shuffle(array){
+      for(let i=array.length-1; i>0; i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [array[i],array[j]]=[array[j],array[i]];
+      }
+      return array;
+    }
+
+    function startTimer(){
+      clearInterval(timer);
+      timeLeft = 30;
+      document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
+      timer = setInterval(()=>{
+        timeLeft--;
+        document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
+        if(timeLeft<=0){
+          clearInterval(timer);
+          nextQ(); // auto move to next when time runs out
+        }
+      },1000);
+    }
+
+    function showQ(){
+      clearInterval(timer);
+      startTimer();
+      const q = questions[index];
+      document.getElementById('q-subject').innerText = `Question ${index+1}/${questions.length}`;
+      document.getElementById('q-text').innerText = q.question;
+      const optDiv = document.getElementById('q-options');
+      optDiv.innerHTML = '';
+      q.options.forEach((opt,i)=>{
+        const btn=document.createElement('button');
+        btn.innerText=String.fromCharCode(65+i)+'. '+opt;
+        btn.disabled = (answers[q.id]!==undefined); // disable all if already answered
+        btn.onclick=()=>select(i,btn);
+        optDiv.appendChild(btn);
+      });
+      document.getElementById('explanation').innerText = answers[q.id]!==undefined ? q.explanation : '';
+    }
+
+    function select(i,btn){
+      const q=questions[index];
+      if(answers[q.id]!==undefined) return; // only one time
+      answers[q.id]=i;
+      const optBtns = document.querySelectorAll('#q-options button');
+      optBtns.forEach((b,idx)=>{
+        b.disabled=true;
+        if(idx===q.answerIndex) b.classList.add('correct');
+        if(idx===i && i!==q.answerIndex) b.classList.add('wrong');
+      });
+      document.getElementById('explanation').innerText = q.explanation;
+    }
+
+    function startQuiz(){
+      index=0;answers={};
+      questions = shuffle(questions); // shuffle questions each time
+      document.getElementById('home').classList.add('hidden');
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('quiz').classList.remove('hidden');
+      showQ();
+    }
+
+    function nextQ(){
+      if(index<questions.length-1){index++;showQ();}
+      else finishQuiz();
+    }
+
+    function prevQ(){
+      if(index>0){index--;showQ();}
+    }
+
+    function finishQuiz(){
+      clearInterval(timer);
+      let score=0;
+      questions.forEach(q=>{ if(answers[q.id]===q.answerIndex) score++; });
+      document.getElementById('quiz').classList.add('hidden');
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('score').innerText = `You scored ${score} / ${questions.length}`;
+    }
+
+    function goHome(){
+      document.getElementById('results').classList.add('hidden');
+      document.getElementById('home').classList.remove('hidden');
+    }
+  </script> 
+</body>
+</html>
